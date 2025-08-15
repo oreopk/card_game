@@ -1,0 +1,15 @@
+ssh -L 5173:localhost:5173 -p 222 root@176.124.200.95
+npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+# 1. Убить занятый порт ЖЁСТКО
+sudo kill -9 $(sudo lsof -t -i:5173)
+
+# 2. Запустить Vite с принудительной фиксацией порта
+npm run dev -- --port 5173 --strictPort --host 0.0.0.0
+
+# 3. Теперь проброс имеет смысл
+ssh -L 5173:localhost:5173 -p 222 root@IP
+
+
+npm install --save-dev @types/node
+npm install tailwindcss @tailwindcss/vite
+npm install -D postcss
