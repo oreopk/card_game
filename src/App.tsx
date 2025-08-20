@@ -2,11 +2,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import "./App.css";
 import { io, Socket } from "socket.io-client";
 
+type CardType = "nishchiy" | "bogach";
+
 interface Card {
   id: string;
   x: number;
   y: number;
+  type: CardType;
 }
+
+const CARD_IMG: Record<CardType, string> = {
+  nishchiy: "/images/nishchiy.png",
+  bogach: "/images/bogach.png",
+};
 
 function App() {
   const socketRef = useRef<Socket | null>(null);
@@ -17,11 +25,7 @@ function App() {
     offsetX: 0,
     offsetY: 0,
   });
-  const [cards, setCards] = useState<Card[]>([
-    { id: "1", x: 100, y: 100 },
-    { id: "2", x: 250, y: 100 },
-    { id: "3", x: 400, y: 100 },
-  ]);
+  const [cards, setCards] = useState<Card[]>([]);
   const fetchCardsState = useCallback(() => {
     socketRef.current?.emit("requestCards");
   }, []);
@@ -33,7 +37,10 @@ function App() {
     };
 
     socketRef.current.on("cardsUpdate", handleCardsUpdate);
-    intervalRef.current = setInterval(fetchCardsState, 60000);
+
+    socketRef.current.emit("requestCards");
+
+    intervalRef.current = setInterval(fetchCardsState, 1000);
 
     fetchCardsState();
 
@@ -95,17 +102,29 @@ function App() {
     <div className="app">
       {cards.map((card) => (
         <div
-          key={card.id}
-          className="text-3xl font-bold underline"
-          // style={{
-          //   left: `${card.x}px`,
-          //   top: `${card.y}px`,
-          // }}
-          onMouseDown={(e) => handleMouseDown(e, card.id)}
-        >
-          {" "}
-          123
-          <h1 className="text-3xl font-bold underline">Hello world!</h1>
+        key={card.id}
+        className={`
+          absolute cursor-grab
+          w-[200px] h-[300px]
+          bg-white flex flex-col items-center justify-center
+          select-none rounded-sm border-4 border-black
+          transition-transform duration-200 ease-[ease]
+          ${dragState.current.isDragging && dragState.current.cardId === card.id 
+            ? "cursor-grabbing shadow-md transition-none" 
+            : ""}
+        `}
+        style={{
+          left: `${card.x}px`,
+          top: `${card.y}px`,
+        }}
+        onMouseDown={(e) => handleMouseDown(e, card.id)}
+      > 
+      <img
+            src={CARD_IMG[card.type]}
+            alt={card.type}
+            draggable={false}
+            style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
+          />
         </div>
       ))}
     </div>
