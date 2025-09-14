@@ -18,7 +18,6 @@ const CARD_IMG: Record<CardType, string> = {
 
 function App() {
   const socketRef = useRef<Socket | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | number | null>(null);
   const dragState = useRef({
     isDragging: false,
     cardId: "",
@@ -26,30 +25,19 @@ function App() {
     offsetY: 0,
   });
   const [cards, setCards] = useState<Card[]>([]);
-  const fetchCardsState = useCallback(() => {
-    socketRef.current?.emit("requestCards");
-  }, []);
 
   useEffect(() => {
     socketRef.current = io("http://4277089-mj96801.twc1.net:3001");
     const handleCardsUpdate = (updatedCards: Card[]) => {
       setCards(updatedCards);
     };
-
     socketRef.current.on("cardsUpdate", handleCardsUpdate);
-
-    socketRef.current.emit("requestCards");
-
-    intervalRef.current = setInterval(fetchCardsState, 1000);
-
-    fetchCardsState();
-
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+
       socketRef.current?.off("cardsUpdate", handleCardsUpdate);
       socketRef.current?.disconnect();
     };
-  }, [fetchCardsState]);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent, cardId: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -74,22 +62,13 @@ function App() {
       x: newX,
       y: newY,
     });
-
-    setCards((prevCards) =>
-      prevCards.map((card) =>
-        card.id === dragState.current.cardId
-          ? { ...card, x: newX, y: newY }
-          : card,
-      ),
-    );
   }, []);
 
   const handleMouseUp = useCallback(() => {
     dragState.current.isDragging = false;
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
-    fetchCardsState();
-  }, [handleMouseMove, fetchCardsState]);
+  }, [handleMouseMove]);
 
   useEffect(() => {
     return () => {
