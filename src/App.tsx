@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./App.css";
 import { io, Socket } from "socket.io-client";
+import { Card } from "./components/Card";
+import {Cards_container} from "./components/Cards_container"
 
 type CardType = "nishchiy" | "bogach";
 
@@ -11,10 +13,12 @@ interface Card {
   type: CardType;
 }
 
-const CARD_IMG: Record<CardType, string> = {
-  nishchiy: "/images/nishchiy.png",
-  bogach: "/images/bogach.png",
-};
+interface Card_Container {
+  id: string;
+  x: number;
+  y: number;
+}
+
 
 function App() {
   const socketRef = useRef<Socket | null>(null);
@@ -25,12 +29,18 @@ function App() {
     offsetY: 0,
   });
   const [cards, setCards] = useState<Card[]>([]);
+  const [cards_Container, setCards_Container] = useState<Card_Container[]>([]);
 
   useEffect(() => {
     socketRef.current = io("http://4277089-mj96801.twc1.net:3001");
     const handleCardsUpdate = (updatedCards: Card[]) => {
       setCards(updatedCards);
     };
+    const handleCardsContainerUpdate = (updatedCards_Container: Card_Container[]) => {
+      setCards_Container(updatedCards_Container);
+    };
+
+    socketRef.current.on("cardsContainerUpdate", handleCardsContainerUpdate);
     socketRef.current.on("cardsUpdate", handleCardsUpdate);
     return () => {
 
@@ -77,34 +87,22 @@ function App() {
     };
   }, [handleMouseMove, handleMouseUp]);
 
-  return (
+ return (
     <div className="app">
       {cards.map((card) => (
-        <div
-        key={card.id}
-        className={`
-          absolute cursor-grab
-          w-[200px] h-[300px]
-          bg-white flex flex-col items-center justify-center
-          select-none rounded-sm border-4 border-black
-          transition-transform duration-200 ease-[ease]
-          ${dragState.current.isDragging && dragState.current.cardId === card.id 
-            ? "cursor-grabbing shadow-md transition-none" 
-            : ""}
-        `}
-        style={{
-          left: `${card.x}px`,
-          top: `${card.y}px`,
-        }}
-        onMouseDown={(e) => handleMouseDown(e, card.id)}
-      > 
-      <img
-            src={CARD_IMG[card.type]}
-            alt={card.type}
-            draggable={false}
-            style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
-          />
-        </div>
+        <Card
+          key={card.id}
+          card={card}
+          onMouseDown={handleMouseDown}
+          isDragging={dragState.current.isDragging}
+          isCurrentDragging={dragState.current.cardId === card.id}
+        />
+      ))}
+         {cards_Container.map((card_Container) => (
+         <Cards_container
+          key={card_Container.id}
+          card_Container={card_Container} 
+        />
       ))}
     </div>
   );
