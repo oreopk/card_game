@@ -13,12 +13,13 @@ interface Card {
   type: CardType;
 }
 
-interface Card_Container {
+interface CardContainer {
   id: string;
   x: number;
   y: number;
+  width: number;
+  height: number;
 }
-
 
 function App() {
   const socketRef = useRef<Socket | null>(null);
@@ -29,14 +30,22 @@ function App() {
     offsetY: 0,
   });
   const [cards, setCards] = useState<Card[]>([]);
-  const [cards_Container, setCards_Container] = useState<Card_Container[]>([]);
-
+  const [cards_Container, setCards_Container] = useState<CardContainer[]>([]);
+  const [screenSize, setScreenSize] = useState({ width: 1920, height: 1080 });
   useEffect(() => {
     socketRef.current = io("http://4277089-mj96801.twc1.net:3001");
+
+   const updateScreenSize = () => {
+      setScreenSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    updateScreenSize(); 
     const handleCardsUpdate = (updatedCards: Card[]) => {
       setCards(updatedCards);
     };
-    const handleCardsContainerUpdate = (updatedCards_Container: Card_Container[]) => {
+    const handleCardsContainerUpdate = (updatedCards_Container: CardContainer[]) => {
       setCards_Container(updatedCards_Container);
     };
 
@@ -87,6 +96,27 @@ function App() {
     };
   }, [handleMouseMove, handleMouseUp]);
 
+  const createClientGrid = (rows: number, cols: number) => {
+    const grid: CardContainer[] = [];
+    const cellWidth = screenSize.width / cols;
+    const cellHeight = screenSize.height / rows;
+    
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        grid.push({
+          id: `${row}-${col}`,
+          x: col * cellWidth,
+          y: row * cellHeight,
+          width: cellWidth,
+          height: cellHeight
+        });
+      }
+    }
+    return grid;
+  };
+  const displayContainers = cards_Container.length > 0 
+    ? cards_Container 
+    : createClientGrid(10, 10);
  return (
     <div className="app">
       {cards.map((card) => (
@@ -98,7 +128,7 @@ function App() {
           isCurrentDragging={dragState.current.cardId === card.id}
         />
       ))}
-         {cards_Container.map((card_Container) => (
+         {displayContainers.map((card_Container) => (
          <Cards_container
           key={card_Container.id}
           card_Container={card_Container} 

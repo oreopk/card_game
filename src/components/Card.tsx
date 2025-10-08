@@ -25,6 +25,7 @@ export function Card({ card, onMouseDown, isDragging, isCurrentDragging }: CardP
         absolute cursor-grab
         w-[200px] h-[300px]
         transition-transform duration-200 ease-[ease]
+        select-none user-drag-none
         ${isDragging && isCurrentDragging 
           ? "cursor-grabbing transition-none" 
           : ""}
@@ -39,6 +40,7 @@ export function Card({ card, onMouseDown, isDragging, isCurrentDragging }: CardP
         src={CARD_IMG[card.type]}
         alt={card.type}
         draggable={false}
+        className="select-none user-drag-none"
         style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
       />
     </div>
