@@ -18,6 +18,7 @@ const CARD_IMG: Record<CardType, string> = {
 };
 
 export function Card({ card, onMouseDown, isDragging, isCurrentDragging }: CardProps) {
+  console.log('Card:', card.id, 'isDragging:', isDragging, 'isCurrentDragging:', isCurrentDragging);
   return (
     <div
       key={card.id}
@@ -27,7 +28,7 @@ export function Card({ card, onMouseDown, isDragging, isCurrentDragging }: CardP
         transition-transform duration-200 ease-[ease]
         select-none user-drag-none
         ${isDragging && isCurrentDragging 
-          ? "cursor-grabbing transition-none" 
+          ? "cursor-grabbing transition-none !shadow-lg z-10" 
           : ""}
       `}
       style={{
@@ -40,7 +41,7 @@ export function Card({ card, onMouseDown, isDragging, isCurrentDragging }: CardP
         src={CARD_IMG[card.type]}
         alt={card.type}
         draggable={false}
-        className="select-none user-drag-none"
+        className="select-none user-drag-none rounded-xl"
         style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
       />
     </div>

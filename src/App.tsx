@@ -3,23 +3,7 @@ import "./App.css";
 import { io, Socket } from "socket.io-client";
 import { Card } from "./components/Card";
 import {Cards_container} from "./components/Cards_container"
-
-type CardType = "nishchiy" | "bogach";
-
-interface Card {
-  id: string;
-  x: number;
-  y: number;
-  type: CardType;
-}
-
-interface CardContainer {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import type { TypeCard, CardContainer } from './types';
 
 function App() {
   const socketRef = useRef<Socket | null>(null);
@@ -29,9 +13,16 @@ function App() {
     offsetX: 0,
     offsetY: 0,
   });
-  const [cards, setCards] = useState<Card[]>([]);
+
+  const [dragVisualState, setDragVisualState] = useState({
+    isDragging: false,
+    cardId: "",
+  });
+
+  const [cards, setCards] = useState<TypeCard[]>([]);
   const [cards_Container, setCards_Container] = useState<CardContainer[]>([]);
   const [screenSize, setScreenSize] = useState({ width: 1920, height: 1080 });
+
   useEffect(() => {
     socketRef.current = io("http://4277089-mj96801.twc1.net:3001");
 
@@ -42,7 +33,7 @@ function App() {
       });
     };
     updateScreenSize(); 
-    const handleCardsUpdate = (updatedCards: Card[]) => {
+    const handleCardsUpdate = (updatedCards: TypeCard[]) => {
       setCards(updatedCards);
     };
     const handleCardsContainerUpdate = (updatedCards_Container: CardContainer[]) => {
@@ -68,23 +59,29 @@ function App() {
     };
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
+    setDragVisualState({
+      isDragging: true,
+      cardId,
+    });
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!dragState.current.isDragging || !socketRef.current) return;
 
-    const newX = e.clientX - dragState.current.offsetX;
-    const newY = e.clientY - dragState.current.offsetY;
-
     socketRef.current.emit("moveSingleCard", {
       id: dragState.current.cardId,
-      x: newX,
-      y: newY,
+      x: e.clientX - dragState.current.offsetX,
+      y: e.clientY - dragState.current.offsetY,
     });
   }, []);
 
   const handleMouseUp = useCallback(() => {
     dragState.current.isDragging = false;
+
+    setDragVisualState({
+      isDragging: false,
+      cardId: "",
+    });
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   }, [handleMouseMove]);
@@ -124,8 +121,8 @@ function App() {
           key={card.id}
           card={card}
           onMouseDown={handleMouseDown}
-          isDragging={dragState.current.isDragging}
-          isCurrentDragging={dragState.current.cardId === card.id}
+          isDragging={dragVisualState.isDragging}
+          isCurrentDragging={dragVisualState.cardId === card.id}
         />
       ))}
          {displayContainers.map((card_Container) => (
