@@ -18,13 +18,12 @@ const CARD_IMG: Record<CardType, string> = {
 };
 
 export function Card({ card, onMouseDown, isDragging, isCurrentDragging }: CardProps) {
-  console.log('Card:', card.id, 'isDragging:', isDragging, 'isCurrentDragging:', isCurrentDragging);
   return (
     <div
       key={card.id}
       className={`
         absolute cursor-grab
-        w-[200px] h-[300px]
+        w-[70px] h-[140px]
         transition-transform duration-200 ease-[ease]
         select-none user-drag-none
         ${isDragging && isCurrentDragging 
