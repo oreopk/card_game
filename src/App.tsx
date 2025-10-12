@@ -6,6 +6,17 @@ import {Cards_container} from "./components/Cards_container"
 import type { TypeCard, CardContainer } from './types';
 
 function App() {
+  const [screenSize, setScreenSize] = useState({ width: 1920, height: 1080 });
+  useEffect(() => {
+   const updateScreenSize = () => {
+      setScreenSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    updateScreenSize(); 
+  }, []);
+
   const socketRef = useRef<Socket | null>(null);
   const dragState = useRef({
     isDragging: false,
@@ -25,18 +36,10 @@ function App() {
 
   const [cards, setCards] = useState<TypeCard[]>([]);
   const [cards_Container, setCards_Container] = useState<CardContainer[]>([]);
-  const [screenSize, setScreenSize] = useState({ width: 1920, height: 1080 });
+
 
   useEffect(() => {
     socketRef.current = io("http://4277089-mj96801.twc1.net:3001");
-
-   const updateScreenSize = () => {
-      setScreenSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-    updateScreenSize(); 
   
     const handleCardsUpdate = (updatedCards: TypeCard[]) => {
       setCards(updatedCards);
@@ -60,7 +63,7 @@ function App() {
     
     const zoomSpeed = 0.001;
     const newScale = scale - e.deltaY * zoomSpeed;
-    const clampedScale = Math.max(0.1, Math.min(3, newScale));
+    const clampedScale = Math.min(Math.max(0.1, newScale), 3);
     
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -68,14 +71,15 @@ function App() {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     
-    const scaleChange = clampedScale / scale;
-    const newX = mouseX - (mouseX - position.x) * scaleChange;
-    const newY = mouseY - (mouseY - position.y) * scaleChange;
-    
-    setScale(clampedScale);
+    const newX = mouseX - (mouseX - position.x) * newScale / scale;
+    const newY = mouseY - (mouseY - position.y) * newScale / scale;
+
+    setScale(newScale);
     setPosition({ x: newX, y: newY });
   }, [scale, position]);
 
+
+  
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
