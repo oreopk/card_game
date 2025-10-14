@@ -83,14 +83,13 @@ const handleWheelReact = (e: React.WheelEvent) => {
   };
 
 
-
   const handleMouseDown = (e: React.MouseEvent, cardId: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
     dragState.current = {
       isDragging: true,
       cardId,
-      offsetX: e.clientX - rect.left,
-      offsetY: e.clientY - rect.top,
+      offsetX: (e.clientX - rect.left) / scaleRef.current,
+      offsetY: (e.clientY - rect.top) / scaleRef.current, 
     };
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
@@ -103,10 +102,13 @@ const handleWheelReact = (e: React.WheelEvent) => {
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!dragState.current.isDragging || !socketRef.current) return;
 
+    const worldX = (e.clientX - positionRef.current.x) / scaleRef.current;
+    const worldY = (e.clientY - positionRef.current.y) / scaleRef.current;
+
     socketRef.current.emit("moveSingleCard", {
       id: dragState.current.cardId,
-      x: e.clientX - dragState.current.offsetX,
-      y: e.clientY - dragState.current.offsetY,
+      x: (worldX - dragState.current.offsetX),
+      y: (worldY - dragState.current.offsetY),
     });
   }, []);
 
