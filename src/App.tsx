@@ -66,9 +66,7 @@ useEffect(() => {
   positionRef.current = position;
 }, [scale, position]);
 
-  const handleWheel = (e: WheelEvent) => {
-    e.preventDefault();
-    
+const handleWheelReact = (e: React.WheelEvent) => {
     const zoomSpeed = 0.001;
     const newScale = scaleRef.current - e.deltaY * zoomSpeed;
     const clampedScale = Math.min(Math.max(0.4, newScale), 4);
@@ -78,19 +76,6 @@ useEffect(() => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    // const container = containerRef.current;
-    // const mouseX = e.pageX - container.offsetLeft;
-    // const mouseY = e.pageY - container.offsetTop;
-    ///////////////////////////////////////////////////////////
-    // const containerRef = useRef<HTMLDivElement>(null);
-    // const rect = containerRef.current?.getBoundingClientRect();
-    // if (!rect) return;
-    // const mouseX = e.clientX - rect.left;
-    // const mouseY = e.clientY - rect.top;
-    /////////////////////////////////////////////////////////////
-    // const newX = mouseX - (mouseX - position.x) * clampedScale / scale;
-    // const newY = mouseY - (mouseY - position.y) * clampedScale / scale;
-
     const newX = e.clientX - (e.clientX - positionRef.current.x) / scaleRef.current * clampedScale;
     const newY = e.clientY - (e.clientY - positionRef.current.y) / scaleRef.current * clampedScale;
 
@@ -98,17 +83,6 @@ useEffect(() => {
   };
 
 
-  
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
 
   const handleMouseDown = (e: React.MouseEvent, cardId: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -159,6 +133,7 @@ useEffect(() => {
       <div 
       className="app relative w-full h-screen overflow-hidden"
       ref={containerRef}
+      onWheel={handleWheelReact}
     >
         <div
         className="absolute w-full h-full"
