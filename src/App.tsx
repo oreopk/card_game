@@ -58,25 +58,44 @@ function App() {
     };
   }, []);
 
-  const handleWheel = useCallback((e: WheelEvent) => {
+const scaleRef = useRef(scale);
+const positionRef = useRef(position);
+
+useEffect(() => {
+  scaleRef.current = scale;
+  positionRef.current = position;
+}, [scale, position]);
+
+  const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
     
     const zoomSpeed = 0.001;
-    const newScale = scale - e.deltaY * zoomSpeed;
-    const clampedScale = Math.min(Math.max(0.1, newScale), 3);
-    
+    const newScale = scaleRef.current - e.deltaY * zoomSpeed;
+    const clampedScale = Math.min(Math.max(0.4, newScale), 4);
+
+    setScale(clampedScale);
+
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    const newX = mouseX - (mouseX - position.x) * newScale / scale;
-    const newY = mouseY - (mouseY - position.y) * newScale / scale;
 
-    setScale(newScale);
+    // const container = containerRef.current;
+    // const mouseX = e.pageX - container.offsetLeft;
+    // const mouseY = e.pageY - container.offsetTop;
+    ///////////////////////////////////////////////////////////
+    // const containerRef = useRef<HTMLDivElement>(null);
+    // const rect = containerRef.current?.getBoundingClientRect();
+    // if (!rect) return;
+    // const mouseX = e.clientX - rect.left;
+    // const mouseY = e.clientY - rect.top;
+    /////////////////////////////////////////////////////////////
+    // const newX = mouseX - (mouseX - position.x) * clampedScale / scale;
+    // const newY = mouseY - (mouseY - position.y) * clampedScale / scale;
+
+    const newX = e.clientX - (e.clientX - positionRef.current.x) / scaleRef.current * clampedScale;
+    const newY = e.clientY - (e.clientY - positionRef.current.y) / scaleRef.current * clampedScale;
+
     setPosition({ x: newX, y: newY });
-  }, [scale, position]);
+  };
 
 
   
@@ -89,7 +108,7 @@ function App() {
     return () => {
       container.removeEventListener('wheel', handleWheel);
     };
-  }, [handleWheel]);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent, cardId: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
